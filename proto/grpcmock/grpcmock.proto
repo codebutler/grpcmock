@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/descriptor.proto";
+import "google/rpc/code.proto";
+
+package grpcmock;
+
+option go_package = "grpcmock/pbgrpcmock";
+
+// Based on google.rpc.Status with strongly-typed "code" field
+message ExampleRpcStatus {
+  google.rpc.Code code = 1;
+  string message = 2;
+  repeated google.protobuf.Any details = 3;
+}
+
+message ExampleRule {
+  string name = 1;
+  oneof response {
+    ExampleRpcStatus status = 2;
+    google.protobuf.Any body = 3;
+  }
+}
+
+extend google.protobuf.MethodOptions {
+  repeated ExampleRule example = 1231232;
+}
+

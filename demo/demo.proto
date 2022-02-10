@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+import "google/rpc/error_details.proto";
+import "grpcmock/grpcmock.proto";
+
+package demo;
+
+message HelloRequest { }
+
+message HelloResponse {
+  string status = 1;
+}
+
+service Demo {
+  rpc SayHello(HelloRequest) returns (HelloResponse) {
+    option (grpcmock.example) = {
+      name: "example1";
+      body {
+       [type.googleapis.com/demo.HelloResponse] {
+         status: "Hello World",
+       }
+      }
+    };
+
+    option (grpcmock.example) = {
+      name: "example2";
+      status: {
+        code: NOT_FOUND
+        message: "not found";
+        details [
+          {
+            [type.googleapis.com/google.rpc.LocalizedMessage] {
+              message: "Demo localized message";
+            }
+          }
+        ];
+      };
+    };
+  }
+}
