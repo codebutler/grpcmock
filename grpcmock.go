@@ -179,32 +179,32 @@ func (gm *GrpcMock) registerServiceMethod(
 			return nil, errors.Wrap(err)
 		}
 
+		if exampleBody := example.GetBody(); exampleBody != nil {
+			if err := exampleBody.UnmarshalTo(res); err != nil {
+				return nil, errors.Wrap(err)
+			}
+			return res, nil
+		}
+
 		if exampleStatus := example.GetStatus(); exampleStatus != nil {
 			var details []protov1.Message
 			for _, d := range exampleStatus.GetDetails() {
-				desc, err := protoregistry.GlobalFiles.FindDescriptorByName(
+				m, err := newMessageFromTypeName(
 					protoreflect.FullName(strings.TrimPrefix(d.GetTypeUrl(), "type.googleapis.com/")))
 				if err != nil {
 					return nil, errors.Wrap(err)
 				}
-				m := dynamicpb.NewMessage(desc.(protoreflect.MessageDescriptor))
 				if err := d.UnmarshalTo(m); err != nil {
 					return nil, errors.Wrap(err)
 				}
 				details = append(details, protov1.MessageV1(m))
 			}
-			st, err := status.New(codes.Code(exampleStatus.GetCode()), exampleStatus.GetMessage()).WithDetails(details...)
+			st, err := status.New(codes.Code(exampleStatus.GetCode()), exampleStatus.GetMessage()).
+				WithDetails(details...)
 			if err != nil {
 				return nil, errors.Wrap(err)
 			}
 			return nil, st.Err()
-		}
-
-		if b := example.GetBody(); b != nil {
-			if err := b.UnmarshalTo(res); err != nil {
-				return nil, errors.Wrap(err)
-			}
-			return res, nil
 		}
 
 		return nil, status.New(codes.Internal, "invalid example").Err()
